@@ -24,7 +24,8 @@ def get_tron_transaction_details(tx_hash):
             'client': None,
             'dealer': None,
             'car': None,
-            'reason': None
+            'reason': None,
+            'comment': None
         }
 
         # Используем функцию шаблона для создания сообщения

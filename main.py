@@ -6,6 +6,8 @@ import uuid
 import message_templates as mt
 
 bot = telebot.TeleBot('6951849445:AAG9qk70t3HAZr83xtKJJskHmxBeEX8aE6s')
+bot_name = '@synthia_txid_bot'
+target_chat = '-4075650689'
 
 tron_pattern = r'\b([0-9a-fA-F]{64})\b'
 temp_storage = {}
@@ -22,15 +24,15 @@ def message_with_link(message):
         print(temp_storage)
 
         markup = types.InlineKeyboardMarkup()
-        yes_button = types.InlineKeyboardButton('Yes, save it!', callback_data=f'save:{unique_id}')
-        no_button = types.InlineKeyboardButton('No, thanks.', callback_data='ignore')
+        yes_button = types.InlineKeyboardButton('Ага, давай!', callback_data=f'save:{unique_id}')
+        no_button = types.InlineKeyboardButton('Нет, не надо.', callback_data='do_not_save')
         markup.add(yes_button, no_button)
-        bot.reply_to(message, 'Do you want to save this Tron transaction?', reply_markup=markup)
+        bot.reply_to(message, 'Похоже, это новая транзакция! Созраним?', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('save:'))
 def handle_save_callback_query(call):
-    chat_id = call.message.chat.id
+    user_name = call.from_user.username
     user_id = call.from_user.id
     unique_id = call.data.split(':')[1]
 
@@ -39,23 +41,24 @@ def handle_save_callback_query(call):
         tron_data = temp_storage[unique_id]
 
         try:
-            prefix = f"Вот что мы получили:\n\n"
+            bot.send_message(call.message.chat.id, f'Tогда продолжим в личке, пойдем {bot_name}')
+            prefix = f"Итак, у нас новая транзакция:\n\n"
             response, transaction_info = get_tron_transaction_details(tron_data)
             superstring[user_id] = transaction_info
-            postfix = (f"У нас не все данные, давай заполним остальные?"
+            postfix = (f"Здесь не все данные, давай заполним остальные?"
                        f"\n(можно писать кратко, потом заполним нормально)"
                        )
-            bot.send_message(chat_id, prefix+response+postfix)
+            bot.send_message(user_id, prefix + response + postfix)
 
             msg = bot.send_message(user_id, "👤 Кто клиент транзакции?")
             bot.register_next_step_handler(msg, client_step)
 
         except Exception as e:
             bot.answer_callback_query(call.id,
-                                      "I can't send you the data. Please make sure you have started a chat with me.")
+                                      "К сожалению, я не могу тебе ничего послать, пока ты не начнешь со мной диалог.")
             print(e)  # For debugging purposes
     else:
-        bot.answer_callback_query(call.id, "The data you are trying to save is no longer available.")
+        bot.answer_callback_query(call.id, "Слушай, это очень старая транза, запости ее сюда еще раз.")
 
 
 def client_step(message):
@@ -88,20 +91,50 @@ def car_step(message):
 def reason_step(message):
     try:
         superstring[message.from_user.id]["reason"] = message.text
-        print(superstring)
+        msg = bot.reply_to(message, '💵 А комментарий надо?')
+        bot.register_next_step_handler(msg, final_step)
+    except Exception as e:
+        bot.reply_to(message, 'ooops!')
+
+
+def final_step(message):
+    try:
+        superstring[message.from_user.id]["comment"] = message.text
+
+        markup = types.InlineKeyboardMarkup()
+        yes_button = types.InlineKeyboardButton('Да, отправляем!', callback_data=f'send:{message.from_user.id}')
+        no_button = types.InlineKeyboardButton('Нет', callback_data='ignore')
+        markup.add(yes_button, no_button)
 
         prefix = f"Проверяем:\n\n"
-        bot.send_message(message.chat.id, prefix + mt.create_transaction_details_message(superstring[message.from_user.id]))
+        response = mt.create_transaction_details_message(superstring[message.from_user.id])
+        postfix = f"\n Все верно? Передаем в ANTCAR-FINANCE?"
+        bot.send_message(message.chat.id, prefix + response + postfix, reply_markup=markup)
 
-        # msg = bot.reply_to(message, '💵 И назначение платежа?')
-        # bot.register_next_step_handler(msg, dealer_step)
     except Exception as e:
         bot.reply_to(message, 'ooops!')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'do_not_save')
 def handle_do_not_save_callback_query(call):
-    bot.answer_callback_query(call.id, text="You chose not to save the link.")
+    bot.answer_callback_query(call.id, text="Мы не сохраняем эту транзакцию.")
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('send:'))
+def send_to_acounter(call):
+    bot.answer_callback_query(call.id, text="Sending")
+    print(f"WE ARE HERE!\n {superstring}")
+
+    prefix = f"@{call.from_user.username} запостил в одном из чатов транзакцию, связанную с AntCar:\n\n"
+    response = mt.create_transaction_details_message(superstring[call.from_user.id])
+    postfix = f"\n А тут Суперстрока"
+    bot.send_message(target_chat, prefix + response + postfix)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('ignore'))
+def dont_send_to_acounter(call):
+    bot.answer_callback_query(call.id, 'Вы отменили операцию.')
+    bot.send_message(call.message.chat.id, 'Ну ладно тогда. Но если передумаешь, тогда нажми "Отправить"')
 
 
 def main():
