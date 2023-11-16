@@ -7,7 +7,7 @@ import message_templates as mt
 
 bot = telebot.TeleBot('6951849445:AAG9qk70t3HAZr83xtKJJskHmxBeEX8aE6s')
 bot_name = '@synthia_txid_bot'
-target_chat = '-4075650689'
+target_chat = '-1001940414840'
 
 tron_pattern = r'\b([0-9a-fA-F]{64})\b'
 temp_storage = {}
@@ -27,7 +27,7 @@ def message_with_link(message):
         yes_button = types.InlineKeyboardButton('Ага, давай!', callback_data=f'save:{unique_id}')
         no_button = types.InlineKeyboardButton('Нет, не надо.', callback_data='do_not_save')
         markup.add(yes_button, no_button)
-        bot.reply_to(message, 'Похоже, это новая транзакция! Созраним?', reply_markup=markup)
+        bot.reply_to(message, 'Похоже, это новая транзакция! Сохраним?', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('save:'))
@@ -36,12 +36,12 @@ def handle_save_callback_query(call):
     user_id = call.from_user.id
     unique_id = call.data.split(':')[1]
 
-    # Check if the unique_id exists in temp_storage
     if unique_id in temp_storage:
         tron_data = temp_storage[unique_id]
 
         try:
-            bot.send_message(call.message.chat.id, f'Tогда продолжим в личке, пойдем {bot_name}')
+            # bot.send_message(call.message.chat.id, f'Хорошо, {call.from_user.first_name}.\n\n'
+            #                                        f'Tогда продолжим в личке, пойдем в {bot_name}')
             prefix = f"Итак, у нас новая транзакция:\n\n"
             response, transaction_info = get_tron_transaction_details(tron_data)
             superstring[user_id] = transaction_info
@@ -54,9 +54,16 @@ def handle_save_callback_query(call):
             bot.register_next_step_handler(msg, client_step)
 
         except Exception as e:
-            bot.answer_callback_query(call.id,
-                                      "К сожалению, я не могу тебе ничего послать, пока ты не начнешь со мной диалог.")
+            bot.send_message(call.message.chat.id,
+                             f"К сожалению, я не могу тебе ничего послать, пока ты не начнешь со мной диалог...\n"
+                             f"Ты впервые общаешься со мной, и у мена нет разрешения писать тебе первой.\n\n"
+                             f"Зайди в {bot_name} и нажми мне START, а потом вернись сюда.")
             print(e)  # For debugging purposes
+
+        else:
+            bot.send_message(call.message.chat.id, f'Хорошо, {call.from_user.first_name}.\n\n'
+                                                   f'Tогда продолжим в личке, пойдем в {bot_name}')
+
     else:
         bot.answer_callback_query(call.id, "Слушай, это очень старая транза, запости ее сюда еще раз.")
 
@@ -91,7 +98,7 @@ def car_step(message):
 def reason_step(message):
     try:
         superstring[message.from_user.id]["reason"] = message.text
-        msg = bot.reply_to(message, '💵 А комментарий надо?')
+        msg = bot.reply_to(message, '💬 А комментарий надо?')
         bot.register_next_step_handler(msg, final_step)
     except Exception as e:
         bot.reply_to(message, 'ooops!')
