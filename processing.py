@@ -12,7 +12,6 @@ def get_tron_transaction_details(tx_hash):
 
         json_data = response.json()
 
-        # Извлекаем необходимую информацию из JSON и создаем словарь
         transaction_info = {
             'from_address': json_data.get('ownerAddress', 'Not available'),
             'to_address': json_data.get('toAddress', 'Not available'),
@@ -25,10 +24,10 @@ def get_tron_transaction_details(tx_hash):
             'dealer': None,
             'car': None,
             'reason': None,
-            'comment': None
+            'comment': None,
+            'link': f"https://tronscan.org/#/transaction/{tx_hash}"
         }
 
-        # Используем функцию шаблона для создания сообщения
         result = mt.create_transaction_details_message(transaction_info)
 
         return result, transaction_info

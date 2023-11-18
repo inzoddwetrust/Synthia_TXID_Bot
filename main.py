@@ -8,6 +8,7 @@ import message_templates as mt
 bot = telebot.TeleBot('6951849445:AAG9qk70t3HAZr83xtKJJskHmxBeEX8aE6s')
 bot_name = '@synthia_txid_bot'
 target_chat = '-1001940414840'
+# target_chat = '-4075650689'
 
 tron_pattern = r'\b([0-9a-fA-F]{64})\b'
 temp_storage = {}
@@ -32,7 +33,7 @@ def message_with_link(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('save:'))
 def handle_save_callback_query(call):
-    user_name = call.from_user.username
+    user_first_name = call.from_user.first_name
     user_id = call.from_user.id
     unique_id = call.data.split(':')[1]
 
@@ -40,8 +41,6 @@ def handle_save_callback_query(call):
         tron_data = temp_storage[unique_id]
 
         try:
-            # bot.send_message(call.message.chat.id, f'Хорошо, {call.from_user.first_name}.\n\n'
-            #                                        f'Tогда продолжим в личке, пойдем в {bot_name}')
             prefix = f"Итак, у нас новая транзакция:\n\n"
             response, transaction_info = get_tron_transaction_details(tron_data)
             superstring[user_id] = transaction_info
@@ -61,7 +60,7 @@ def handle_save_callback_query(call):
             print(e)  # For debugging purposes
 
         else:
-            bot.send_message(call.message.chat.id, f'Хорошо, {call.from_user.first_name}.\n\n'
+            bot.send_message(call.message.chat.id, f'Хорошо, {user_first_name}.\n\n'
                                                    f'Tогда продолжим в личке, пойдем в {bot_name}')
 
     else:
@@ -130,12 +129,11 @@ def handle_do_not_save_callback_query(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('send:'))
 def send_to_acounter(call):
     bot.answer_callback_query(call.id, text="Sending")
-    print(f"WE ARE HERE!\n {superstring}")
 
     prefix = f"@{call.from_user.username} запостил в одном из чатов транзакцию, связанную с AntCar:\n\n"
     response = mt.create_transaction_details_message(superstring[call.from_user.id])
-    postfix = f"\n А тут Суперстрока"
-    bot.send_message(target_chat, prefix + response + postfix)
+    postfix = f"{mt.create_superstring_message(superstring[call.from_user.id])}"
+    bot.send_message(target_chat, prefix + response + postfix, parse_mode='HTML', disable_web_page_preview=True)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('ignore'))

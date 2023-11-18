@@ -16,8 +16,6 @@ def create_transaction_details_message(transaction_info):
 
 def create_superstring_message(superstring):
     return (
-        f"А вот и Суперстрока!\n\n"
-        f"<code>{car_params['full_name']}|●|●|{car_params['year']}|{car_params['body']}|{car_params['fuel']}|{car_params['gear']}|{car_params['material']}|{car_params['hp']}|{car_params['litre']}|{car_params['drive']}|●|●|{car_params['price']}|{car_params['link']}|{car_data['dongchendi_url']}</code>"
+        f"А вот и Суперстрока! (просто кликни на нее и вставь в таблицу):\n\n"
+        f"<code>●|{superstring['client']}|{superstring['dealer']}|●|●|{superstring['car']}|●|●|●|●|●|●|●|●|●|●|{superstring['reason']}|{superstring['timestamp']}|●|{float(superstring['amount'])+float(superstring['fee'])}|●|●|●|{superstring['link']}</code>"
     )
-
-# ●|client|dealer|●|●|car|●|●|●|●|●|●|●|●|●|●|reason|date|●|amount|●|●|●|link
