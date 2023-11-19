@@ -1,9 +1,19 @@
-import re
 import telebot
 from telebot import types
-from processing import get_tron_transaction_details
+import logging
+import time
+import re
 import uuid
+from processing import get_tron_transaction_details
 import message_templates as mt
+
+# Настройка логирования
+logging.basicConfig(
+    filename='error.log',  # Файл для записи логов
+    filemode='a',  # Режим записи в файл, 'a' означает дозапись
+    level=logging.INFO,  # Уровень логирования
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Формат записываемых сообщений
+)
 
 bot = telebot.TeleBot('6951849445:AAG9qk70t3HAZr83xtKJJskHmxBeEX8aE6s')
 bot_name = '@synthia_txid_bot'
@@ -143,7 +153,15 @@ def dont_send_to_acounter(call):
 
 
 def main():
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            print(f"Trying to reconnect...")
+            bot.polling(none_stop=True)
+            print(f"Connected!")
+        except Exception as e:
+            print(f"Ошибка бота: {e}")
+            logging.error(f"Ошибка бота: {e}", exc_info=True)
+            time.sleep(30)
 
 
 if __name__ == '__main__':
