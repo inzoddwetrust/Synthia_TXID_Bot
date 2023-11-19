@@ -1,5 +1,7 @@
 import telebot
 from telebot import types
+import os
+from dotenv import load_dotenv
 import logging
 import time
 import re
@@ -15,10 +17,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Формат записываемых сообщений
 )
 
-bot = telebot.TeleBot('6951849445:AAG9qk70t3HAZr83xtKJJskHmxBeEX8aE6s')
-bot_name = '@synthia_txid_bot'
-target_chat = '-1001940414840'
-# target_chat = '-4075650689'
+load_dotenv()
+bot_token = os.getenv('TELEBOT_TOKEN')
+bot_name = os.getenv('BOT_NAME')
+target_chat = os.getenv('TARGET_CHAT')
+
+bot = telebot.TeleBot(bot_token)
 
 tron_pattern = r'\b([0-9a-fA-F]{64})\b'
 temp_storage = {}
@@ -59,9 +63,6 @@ def handle_save_callback_query(call):
                        )
             bot.send_message(user_id, prefix + response + postfix)
 
-            msg = bot.send_message(user_id, "👤 Кто клиент транзакции?")
-            bot.register_next_step_handler(msg, client_step)
-
         except Exception as e:
             bot.send_message(call.message.chat.id,
                              f"К сожалению, я не могу тебе ничего послать, пока ты не начнешь со мной диалог...\n"
@@ -70,8 +71,13 @@ def handle_save_callback_query(call):
             print(e)  # For debugging purposes
 
         else:
-            bot.send_message(call.message.chat.id, f'Хорошо, {user_first_name}.\n\n'
+            msg = bot.send_message(user_id, "👤 Кто клиент транзакции?")
+            bot.register_next_step_handler(msg, client_step)
+
+            if call.message.chat.type != "private":
+                bot.send_message(call.message.chat.id, f'Хорошо, {user_first_name}.\n\n'
                                                    f'Tогда продолжим в личке, пойдем в {bot_name}')
+
 
     else:
         bot.answer_callback_query(call.id, "Слушай, это очень старая транза, запости ее сюда еще раз.")
@@ -155,9 +161,8 @@ def dont_send_to_acounter(call):
 def main():
     while True:
         try:
-            print(f"Trying to reconnect...")
-            bot.polling(none_stop=True)
             print(f"Connected!")
+            bot.polling(none_stop=True)
         except Exception as e:
             print(f"Ошибка бота: {e}")
             logging.error(f"Ошибка бота: {e}", exc_info=True)
