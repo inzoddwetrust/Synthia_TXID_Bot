@@ -9,7 +9,6 @@ import uuid
 from processing import get_tron_transaction_details
 import message_templates as mt
 
-# Настройка логирования
 logging.basicConfig(
     filename='error.log',  # Файл для записи логов
     filemode='a',  # Режим записи в файл, 'a' означает дозапись
@@ -25,8 +24,9 @@ target_chat = os.getenv('TARGET_CHAT')
 bot = telebot.TeleBot(bot_token)
 
 tron_pattern = r'\b([0-9a-fA-F]{64})\b'
-temp_storage = {}
-superstring = {}
+temp_storage = {}  # тут у нас хранятся данные транзакций с уникальными id
+active_requests = {}  # тут активные запросы
+superstring = {}  # а тут генерируется суперстрока
 
 
 @bot.message_handler(func=lambda message: re.search(tron_pattern, message.text))
@@ -51,7 +51,11 @@ def handle_save_callback_query(call):
     user_id = call.from_user.id
     unique_id = call.data.split(':')[1]
 
+    if user_id in active_requests and active_requests[user_id] == unique_id:
+        return  # Чтоб не плодить вызовы диалогов по заполнению данных
+
     if unique_id in temp_storage:
+        active_requests[user_id] = unique_id
         tron_data = temp_storage[unique_id]
 
         try:
@@ -76,7 +80,7 @@ def handle_save_callback_query(call):
 
             if call.message.chat.type != "private":
                 bot.send_message(call.message.chat.id, f'Хорошо, {user_first_name}.\n\n'
-                                                   f'Tогда продолжим в личке, пойдем в {bot_name}')
+                                                       f'Tогда продолжим в личке, пойдем в {bot_name}')
 
 
     else:
