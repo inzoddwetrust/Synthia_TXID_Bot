@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 def create_transaction_details_message(transaction_info):
     return (
             f"🔁 Отправитель: {transaction_info['from_address']}\n"

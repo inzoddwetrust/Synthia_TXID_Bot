@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import message_templates as mt
 import requests
 from datetime import datetime

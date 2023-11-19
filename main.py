@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import telebot
 from telebot import types
 import os
@@ -167,6 +169,9 @@ def main():
         try:
             print(f"Connected!")
             bot.polling(none_stop=True)
+        except KeyboardInterrupt:
+            print("Остановка бота...")
+            break  # Прерывание цикла
         except Exception as e:
             print(f"Ошибка бота: {e}")
             logging.error(f"Ошибка бота: {e}", exc_info=True)
