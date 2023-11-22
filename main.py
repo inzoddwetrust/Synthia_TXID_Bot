@@ -84,7 +84,6 @@ def handle_save_callback_query(call):
                 bot.send_message(call.message.chat.id, f'Хорошо, {user_first_name}.\n\n'
                                                        f'Tогда продолжим в личке, пойдем в {bot_name}')
 
-
     else:
         bot.answer_callback_query(call.id, "Слушай, это очень старая транза, запости ее сюда еще раз.")
 
@@ -162,6 +161,11 @@ def send_to_acounter(call):
 def dont_send_to_acounter(call):
     bot.answer_callback_query(call.id, 'Вы отменили операцию.')
     bot.send_message(call.message.chat.id, 'Ну ладно тогда. Но если передумаешь, тогда нажми "Отправить"')
+
+
+@bot.message_handler(commands=['ping'])
+def on_ping(message):
+    bot.reply_to(message, "Все в порядке, я работаю!")
 
 
 def main():
