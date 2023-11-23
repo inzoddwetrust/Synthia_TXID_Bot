@@ -1,49 +1,99 @@
 #!/bin/bash
 
-# Проверить наличие Python 3
+USERNAME=$(whoami)
+GROUP=$(id -gn)
+
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
+# Установка Python 3, если он не установлен
 if ! command -v python3 &> /dev/null; then
     echo "Установка Python 3..."
     sudo apt-get update
     sudo apt-get install -y python3
 fi
 
-# Проверить наличие pip
-if ! command -v pip &> /dev/null; then
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
+# Установка pip, если он не установлен
+if ! command -v pip3 &> /dev/null; then
     echo "Установка pip..."
     sudo apt-get install -y python3-pip
 fi
 
-# Установка зависимостей Python (перейти в рабочий каталог проекта)
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
+# Установка python3-venv для создания виртуального окружения
+if ! dpkg -l | grep -qw python3-venv; then
+    echo "Установка пакета python3-venv..."
+    sudo apt-get install -y python3-venv
+fi
+
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
 echo "Установка зависимостей Python..."
-cd /home/$USER/Synthia_TXID_Bot
-pip install -r requirements.txt
+cd /home/$USERNAME/Synthia_TXID_Bot
 
-# Установка проекта как systemd-сервиса
+# Создание виртуального окружения, если оно еще не создано
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
 
-# Создать файл unit-сервиса (например, synthia.service)
-cat <<EOF > /etc/systemd/system/synthia.service
+# Активация виртуального окружения
+source venv/bin/activate
+
+# Установка зависимостей из файла requirements.txt
+pip3 install -r requirements.txt
+
+# Деактивация виртуального окружения
+deactivate
+
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
+# Запрос токена у пользователя
+read -p "Введите токен Telegram бота: " TELEBOT_TOKEN
+echo "TELEBOT_TOKEN=$TELEBOT_TOKEN" > .env
+echo "BOT_NAME=@synthia_txid_bot" >> .env
+echo "TARGET_CHAT=-4075650689" >> .env
+
+# Очистка переменной TELEBOT_TOKEN из текущего окружения
+unset TELEBOT_TOKEN
+
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
+# Создание и настройка systemd-сервиса
+sudo bash -c 'cat <<EOF > /etc/systemd/system/synthia.service
 [Unit]
 Description=Synthia Python Project
+After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/$USER/Synthia_TXID_Bot/main.py
-WorkingDirectory=/home/$USER/Synthia_TXID_Bot
-Restart=always
-User=$USER
+User=$USERNAME
 Group=$GROUP
+WorkingDirectory=/home/$USERNAME/Synthia_TXID_Bot
+ExecStart=/home/$USERNAME/Synthia_TXID_Bot/venv/bin/python /home/$USERNAME/Synthia_TXID_Bot/main.py
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOF'
 
-# Перезагрузить systemd для применения изменений
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
 echo "Перезагрузка systemd..."
-systemctl daemon-reload
+sudo systemctl daemon-reload
 
-# Запустить сервис и включить его в автозапуск
+echo "Нажмите любую клавишу для продолжения..."
+read -n 1 -s
+
 echo "Запуск и настройка автозапуска сервиса..."
-systemctl start synthia
-systemctl enable synthia
+sudo systemctl enable synthia
+sudo systemctl start synthia
 
-# Завершение скрипта с сообщением об успешной установке
 echo "Установка завершена. Проект Synthia настроен как systemd-сервис."
