@@ -60,14 +60,13 @@ echo "TELEBOT_TOKEN=$TELEBOT_TOKEN" > .env
 echo "BOT_NAME=@synthia_txid_bot" >> .env
 echo "TARGET_CHAT=-4075650689" >> .env
 
-# Очистка переменной TELEBOT_TOKEN из текущего окружения
 unset TELEBOT_TOKEN
 
 echo "Нажмите любую клавишу для продолжения..."
 read -n 1 -s
 
 # Создание и настройка systemd-сервиса
-sudo bash -c 'cat <<EOF > /etc/systemd/system/synthia.service
+sudo bash -c "cat <<EOF > /etc/systemd/system/synthia.service
 [Unit]
 Description=Synthia Python Project
 After=network.target
@@ -75,13 +74,13 @@ After=network.target
 [Service]
 User=$USERNAME
 Group=$GROUP
-WorkingDirectory=/home/$USERNAME/Synthia_TXID_Bot
-ExecStart=/home/$USERNAME/Synthia_TXID_Bot/venv/bin/python /home/$USERNAME/Synthia_TXID_Bot/main.py
+WorkingDirectory=/home/$USERNAME/synthia_txid_bot
+ExecStart=/home/$USERNAME/synthia_txid_bot/venv/bin/python3 /home/$USERNAME/synthia_txid_bot/main.py
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF"
 
 echo "Нажмите любую клавишу для продолжения..."
 read -n 1 -s
