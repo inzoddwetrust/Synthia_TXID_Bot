@@ -165,7 +165,7 @@ def dont_send_to_acounter(call):
 
 @bot.message_handler(commands=['ping'])
 def on_ping(message):
-    bot.reply_to(message, "Все в порядке, я работаю!")
+    bot.reply_to(message, f"Все в порядке, я работаю!\n\n Целевой чат: {target_chat}")
 
 
 def main():
