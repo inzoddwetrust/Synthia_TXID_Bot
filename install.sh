@@ -35,7 +35,7 @@ echo "Нажмите любую клавишу для продолжения..."
 read -n 1 -s
 
 echo "Установка зависимостей Python..."
-cd /home/$USERNAME/Synthia_TXID_Bot
+cd /home/$USERNAME/synthia_txid_bot
 
 # Создание виртуального окружения, если оно еще не создано
 if [ ! -d "venv" ]; then
